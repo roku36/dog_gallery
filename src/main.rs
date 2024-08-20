@@ -7,7 +7,8 @@ use bevy::{
     prelude::*,
 };
 
-const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
+const NORMAL_BUTTON: Color = Color::srgb(0.85, 0.85, 0.85);
+const PRESSED_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
 
 fn main() {
     App::new()
@@ -78,7 +79,11 @@ fn setup(
                 .looking_at(Vec3::new(0.0, 20.0, 0.0), Vec3::Y),
             ..default()
         },
-        PanOrbitCamera::default(),
+        PanOrbitCamera {
+            focus: Vec3::new(0.0, 20.0, 0.0),
+            pan_sensitivity: 0.0,
+            ..default()
+        }
     ));
 
     // Plane
@@ -194,23 +199,51 @@ fn setup_scene_once_loaded(
 
 fn button_interaction_system(
     mut interaction_query: Query<
-        (&Interaction, &AnimationButton),
-        (Changed<Interaction>, With<Button>),
+        (&Interaction, &mut BackgroundColor, &AnimationButton),
+        // (Changed<Interaction>, With<Button>),
+        With<Button>,
     >,
     animations: Res<Animations>,
     mut animation_players: Query<(&mut AnimationPlayer, &mut AnimationTransitions)>,
+    mut selected_animation: Local<Option<usize>>, // 現在選択されているアニメーションのインデックス
 ) {
-    for (interaction, animation_button) in &mut interaction_query {
+    // find selected button
+    let mut new_selection = None;
+    for (interaction, _color, animation_button) in &mut interaction_query {
         if *interaction == Interaction::Pressed {
-            for (mut player, mut transitions) in &mut animation_players {
-                transitions
-                    .play(
-                        &mut player,
-                        animations.animations[animation_button.animation_index],
-                        Duration::from_millis(250),
-                    )
-                    .repeat();
+            if let Some(selected_index) = *selected_animation {
+                if selected_index == animation_button.animation_index {
+                    return; // すでに選択されているボタンは無視
+                }
+            }
+            new_selection = Some(animation_button.animation_index);
+            break;
+        }
+    }
+
+    if let Some(new_animation_index) = new_selection {
+        // play new animation
+        *selected_animation = Some(new_animation_index);
+
+        for (mut player, mut transitions) in &mut animation_players {
+            transitions
+                .play(
+                    &mut player,
+                    animations.animations[new_animation_index],
+                    Duration::from_millis(250),
+                )
+                .repeat();
+        }
+
+        // reset button state
+        for (_, mut color, animation_button) in &mut interaction_query {
+            if animation_button.animation_index == new_animation_index {
+                *color = PRESSED_BUTTON.into(); // 新しく選択されたボタンの色を変更
+            } else {
+                println!("color reset");
+                *color = NORMAL_BUTTON.into(); // 他のボタンの色をリセット
             }
         }
     }
 }
+
