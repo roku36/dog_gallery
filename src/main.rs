@@ -135,8 +135,8 @@ fn spawn_animation_button(
     image_path: &str,
     animation_index: usize,
 ) {
-    parent.spawn((
-        NodeBundle {
+    let mut builder = parent.spawn((
+        ButtonBundle {
             style: Style {
                 width: Val::Px(100.0),
                 height: Val::Px(100.0),
@@ -149,10 +149,9 @@ fn spawn_animation_button(
             ..default()
         },
         AnimationButton { animation_index },
-        UiImage::new(asset_server.load(image_path.to_string())),
-        Button,
-        Interaction::default(),
     ));
+
+    builder.insert(UiImage::new(asset_server.load(image_path.to_string())));
 }
 
 #[derive(Component)]
