@@ -1,47 +1,38 @@
-name: deploy-github-page
+name: Deploy to GitHub Pages
 
 on:
-  workflow_dispatch:
-
-permissions:
-  contents: write
+  push:
+    branches:
+      - main
 
 jobs:
-  build-web:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Check out the repository
+        uses: actions/checkout@v2
 
-      - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@master
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          target: wasm32-unknown-unknown
 
-      - name: Install Dependencies
-        run: sudo apt-get update && sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev
+      - name: Install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli
 
-      - name: Add wasm target
-        run: rustup target add wasm32-unknown-unknown
+      - name: Build for WebAssembly
+        run: cargo build --release --target wasm32-unknown-unknown
 
-      - name: Build WebAssembly
-        run: cargo build --target wasm32-unknown-unknown --release
+      - name: Generate wasm-bindgen output
+        run: wasm-bindgen --out-dir pkg --target web target/wasm32-unknown-unknown/release/marie_gallery.wasm
 
-      - name: Prepare files for GitHub Pages
-        run: |
-          mkdir -p dist
-          cp target/wasm32-unknown-unknown/release/*.wasm dist/
-          cp index.html dist/
+      - name: Copy index.html to pkg
+        run: cp index.html pkg/ && cp -r assets pkg/
 
-      - name: Optimize Wasm
-        uses: NiklasEi/wasm-opt-action@v2
-        with:
-          file: dist/*.wasm
-          optimize_all: true
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
           branch: gh-pages
-          folder: dist
+          folder: pkg
