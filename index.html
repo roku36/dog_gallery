@@ -1,19 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WASM Project</title>
-</head>
-<body>
-    <h1>Hello, WebAssembly!</h1>
-    <script>
-        fetch('marie_gallery.wasm')
-            .then(response => response.arrayBuffer())
-            .then(bytes => WebAssembly.instantiate(bytes))
-            .then(results => {
-                console.log("WASM loaded and instantiated:", results);
-            })
-            .catch(console.error);
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+        outline: none;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import init from './marie_gallery.js';
+      init();
     </script>
-</body
+  </body>
+</html>
