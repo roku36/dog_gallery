@@ -30,13 +30,9 @@ jobs:
       - name: Copy index.html to pkg
         run: cp index.html pkg/ && cp -r assets pkg/
 
-      - name: Deploy to gh-pages branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git checkout --orphan gh-pages
-          git --work-tree=pkg add --all
-          git --work-tree=pkg commit -m "Deploy to GitHub Pages"
-          git push origin gh-pages --force
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./pkg
+
