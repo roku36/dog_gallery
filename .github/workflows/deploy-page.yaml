@@ -13,26 +13,33 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Install rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+
       - name: Install Dependencies
-        run: sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev
-      - name: Install trunk
-        uses: jetli/trunk-action@v0.4.0
-        with:
-          version: 'latest'
+        run: sudo apt-get update && sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev
+
       - name: Add wasm target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Build WebAssembly
+        run: cargo build --target wasm32-unknown-unknown --release
+
+      - name: Prepare files for GitHub Pages
         run: |
-          rustup target add wasm32-unknown-unknown
-      - name: Build Release
-        run: |
-          trunk build --release
-      - name: optimize Wasm
+          mkdir -p dist
+          cp target/wasm32-unknown-unknown/release/*.wasm dist/
+          cp index.html dist/
+
+      - name: Optimize Wasm
         uses: NiklasEi/wasm-opt-action@v2
         with:
           file: dist/*.wasm
+          optimize_all: true
+
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
