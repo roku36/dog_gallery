@@ -19,7 +19,7 @@ jobs:
           target: wasm32-unknown-unknown
 
       - name: Install wasm-bindgen-cli
-        run: cargo install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli --version 0.2.92
 
       - name: Build for WebAssembly
         run: cargo build --release --target wasm32-unknown-unknown
