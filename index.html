@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WASM Project</title>
+</head>
+<body>
+    <h1>Hello, WebAssembly!</h1>
+    <script>
+        fetch('marie_gallery.wasm')
+            .then(response => response.arrayBuffer())
+            .then(bytes => WebAssembly.instantiate(bytes))
+            .then(results => {
+                console.log("WASM loaded and instantiated:", results);
+            })
+            .catch(console.error);
+    </script>
+</body
