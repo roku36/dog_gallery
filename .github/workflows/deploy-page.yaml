@@ -30,9 +30,9 @@ jobs:
       - name: Copy index.html to pkg
         run: cp index.html pkg/ && cp -r assets pkg/
 
-
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4.2.5
-        with:
-          branch: gh-pages
-          folder: pkg
+      - name: Deploy to gh-pages branch
+        run: |
+          git checkout --orphan gh-pages
+          git --work-tree=pkg add --all
+          git --work-tree=pkg commit -m "Deploy to GitHub Pages"
+          git push origin gh-pages --force
