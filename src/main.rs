@@ -89,7 +89,7 @@ fn setup(
     // Plane
     commands.spawn(PbrBundle {
         mesh: meshes.add(Plane3d::default().mesh().size(500000.0, 500000.0)),
-        material: materials.add(Color::srgb(0.3, 0.5, 0.3)),
+        material: materials.add(Color::srgb(0.3, 0.5, 0.5)),
         ..default()
     });
 
@@ -122,7 +122,11 @@ fn setup(
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
                 justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
+                align_items: AlignItems::FlexEnd,
+                margin: UiRect {
+                    bottom: Val::Px(-50.0),
+                    ..default()
+                },
                 ..default()
             },
             ..default()
@@ -145,7 +149,7 @@ fn spawn_animation_button(
             style: Style {
                 width: Val::Px(100.0),
                 height: Val::Px(100.0),
-                margin: UiRect::all(Val::Px(5.0)),
+                margin: UiRect::all(Val::Px(15.0)),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 ..default()
