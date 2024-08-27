@@ -85,7 +85,7 @@ fn setup(
         },
         PanOrbitCamera {
             focus: Vec3::new(0.0, 20.0, 0.0),
-            zoom_upper_limit: Some(400.0),
+            zoom_upper_limit: Some(320.0),
             zoom_lower_limit: Some(100.0),
             pan_sensitivity: 0.0,
             ..default()
@@ -138,9 +138,9 @@ fn setup(
             ..default()
         })
         .with_children(|parent| {
-            spawn_animation_button(parent, &asset_server, "images/dog_icon.png", 0);
-            spawn_animation_button(parent, &asset_server, "images/dog_icon.png", 1);
-            spawn_animation_button(parent, &asset_server, "images/dog_icon.png", 2);
+            spawn_animation_button(parent, &asset_server, "images/sit0.png", 0);
+            spawn_animation_button(parent, &asset_server, "images/walk0.png", 1);
+            spawn_animation_button(parent, &asset_server, "images/run0.png", 2);
         });
 }
 
@@ -160,7 +160,6 @@ fn spawn_animation_button(
                 align_items: AlignItems::Center,
                 ..default()
             },
-            background_color: NORMAL_BUTTON.into(),
             ..default()
         },
         AnimationButton { animation_index },
