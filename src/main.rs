@@ -9,13 +9,17 @@ use bevy::{
 
 const NORMAL_BUTTON: Color = Color::srgb(0.85, 0.85, 0.85);
 const PRESSED_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
+const SKY_COLOR: Color = Color::srgb(0.4, 0.7, 0.9);
+const GROUND_COLOR: Color = Color::srgb(0.2, 0.5, 0.3);
+const SUN_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
 
 fn main() {
     App::new()
         .insert_resource(AmbientLight {
-            color: Color::WHITE,
-            brightness: 2000.,
+            color: SUN_COLOR,
+            brightness: 1000.,
         })
+        .insert_resource(ClearColor(SKY_COLOR))
         .add_plugins((
             DefaultPlugins
                 .set(WindowPlugin {
@@ -81,6 +85,8 @@ fn setup(
         },
         PanOrbitCamera {
             focus: Vec3::new(0.0, 20.0, 0.0),
+            zoom_upper_limit: Some(400.0),
+            zoom_lower_limit: Some(100.0),
             pan_sensitivity: 0.0,
             ..default()
         }
@@ -89,7 +95,7 @@ fn setup(
     // Plane
     commands.spawn(PbrBundle {
         mesh: meshes.add(Plane3d::default().mesh().size(500000.0, 500000.0)),
-        material: materials.add(Color::srgb(0.3, 0.5, 0.5)),
+        material: materials.add(GROUND_COLOR),
         ..default()
     });
 
