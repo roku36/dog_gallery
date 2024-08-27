@@ -138,19 +138,23 @@ fn setup(
             ..default()
         })
         .with_children(|parent| {
-            spawn_animation_button(parent, &asset_server, "images/sit0.png", 0);
-            spawn_animation_button(parent, &asset_server, "images/walk0.png", 1);
-            spawn_animation_button(parent, &asset_server, "images/run0.png", 2);
+            spawn_animation_button(parent, &asset_server, "images/sit0.png", "images/sit1.png", 0);
+            spawn_animation_button(parent, &asset_server, "images/walk0.png", "images/walk1.png", 1);
+            spawn_animation_button(parent, &asset_server, "images/run0.png", "images/run1.png", 2);
         });
 }
 
 fn spawn_animation_button(
     parent: &mut ChildBuilder,
     asset_server: &Res<AssetServer>,
-    image_path: &str,
+    normal_image_path: &str,
+    pressed_image_path: &str,
     animation_index: usize,
 ) {
-    let mut builder = parent.spawn((
+    let normal_image = asset_server.load(normal_image_path.to_string());
+    let pressed_image = asset_server.load(pressed_image_path.to_string());
+
+    parent.spawn((
         ButtonBundle {
             style: Style {
                 width: Val::Px(100.0),
@@ -160,17 +164,22 @@ fn spawn_animation_button(
                 align_items: AlignItems::Center,
                 ..default()
             },
+            image: UiImage::new(normal_image.clone()), // initial image is unpressed
             ..default()
         },
-        AnimationButton { animation_index },
+        AnimationButton {
+            animation_index,
+            normal_image,
+            pressed_image,
+        },
     ));
-
-    builder.insert(UiImage::new(asset_server.load(image_path.to_string())));
 }
 
 #[derive(Component)]
 struct AnimationButton {
     animation_index: usize,
+    normal_image: Handle<Image>,
+    pressed_image: Handle<Image>,
 }
 
 fn setup_scene_once_loaded(
@@ -208,21 +217,20 @@ fn setup_scene_once_loaded(
 
 fn button_interaction_system(
     mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor, &AnimationButton),
-        // (Changed<Interaction>, With<Button>),
+        (&Interaction, &mut UiImage, &AnimationButton),
         With<Button>,
     >,
     animations: Res<Animations>,
     mut animation_players: Query<(&mut AnimationPlayer, &mut AnimationTransitions)>,
-    mut selected_animation: Local<Option<usize>>, // 現在選択されているアニメーションのインデックス
+    mut selected_animation: Local<Option<usize>>,
 ) {
     // find selected button
     let mut new_selection = None;
-    for (interaction, _color, animation_button) in &mut interaction_query {
+    for (interaction, _image, animation_button) in &mut interaction_query {
         if *interaction == Interaction::Pressed {
             if let Some(selected_index) = *selected_animation {
                 if selected_index == animation_button.animation_index {
-                    return; // すでに選択されているボタンは無視
+                    return;
                 }
             }
             new_selection = Some(animation_button.animation_index);
@@ -245,14 +253,12 @@ fn button_interaction_system(
         }
 
         // reset button state
-        for (_, mut color, animation_button) in &mut interaction_query {
+        for (_, mut image, animation_button) in &mut interaction_query {
             if animation_button.animation_index == new_animation_index {
-                *color = PRESSED_BUTTON.into(); // 新しく選択されたボタンの色を変更
+                *image = animation_button.pressed_image.clone().into(); // change selected button
             } else {
-                println!("color reset");
-                *color = NORMAL_BUTTON.into(); // 他のボタンの色をリセット
+                *image = animation_button.normal_image.clone().into(); // change unselected button
             }
         }
     }
 }
-
