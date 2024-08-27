@@ -54,8 +54,8 @@ fn setup(
     let animations = graph
         .add_clips(
             [
+                GltfAssetLabel::Animation(1).from_asset("models/dog.glb"),
                 GltfAssetLabel::Animation(2).from_asset("models/dog.glb"),
-                GltfAssetLabel::Animation(3).from_asset("models/dog.glb"),
                 GltfAssetLabel::Animation(0).from_asset("models/dog.glb"),
             ]
                 .into_iter()
