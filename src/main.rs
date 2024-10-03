@@ -1,14 +1,15 @@
+use bevy::{color::palettes::css, prelude::*};
 use std::f32::consts::PI;
 use std::time::Duration;
 use bevy_panorbit_camera::*;
 use bevy::{
-    animation::{animate_targets, RepeatAnimation},
+    animation::animate_targets,
     pbr::CascadeShadowConfigBuilder,
     prelude::*,
 };
+use bevy_mod_raycast::prelude::*;
+// use bevy::render::settings::WgpuSettings;
 
-const NORMAL_BUTTON: Color = Color::srgb(0.85, 0.85, 0.85);
-const PRESSED_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
 const SKY_COLOR: Color = Color::srgb(0.4, 0.7, 0.9);
 const GROUND_COLOR: Color = Color::srgb(0.2, 0.5, 0.3);
 const SUN_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
@@ -20,8 +21,10 @@ fn main() {
             brightness: 1000.,
         })
         .insert_resource(ClearColor(SKY_COLOR))
+        .insert_resource(RaycastPluginState::<()>::default().with_debug_cursor())
         .add_plugins((
             DefaultPlugins
+                .set(bevy_mod_raycast::low_latency_window_plugin())
                 .set(WindowPlugin {
                     primary_window: Window {
                         fit_canvas_to_parent: true,
@@ -32,10 +35,13 @@ fn main() {
                     ..default()
                 }),
             PanOrbitCameraPlugin,
+            DeferredRaycastingPlugin::<()>::default(),
         ))
         .add_systems(Startup, setup)
         .add_systems(Update, setup_scene_once_loaded.before(animate_targets))
         .add_systems(Update, button_interaction_system)
+        .add_systems(Update, get_cursor_position)
+        .add_systems(Update, make_scene_pickable)
         .run();
 }
 
@@ -45,6 +51,12 @@ struct Animations {
     #[allow(dead_code)]
     graph: Handle<AnimationGraph>,
 }
+
+#[derive(Component)]
+struct Dog;
+
+#[derive(Component)]
+struct Gizmo;
 
 fn setup(
     mut commands: Commands,
@@ -89,15 +101,18 @@ fn setup(
             zoom_lower_limit: Some(100.0),
             pan_sensitivity: 0.0,
             ..default()
-        }
+        },
+        RaycastSource::<()>::new_cursor(),
     ));
 
     // Plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Plane3d::default().mesh().size(500000.0, 500000.0)),
-        material: materials.add(GROUND_COLOR),
-        ..default()
-    });
+    commands.spawn((
+        PbrBundle {
+            mesh: meshes.add(Plane3d::default().mesh().size(500000.0, 500000.0)),
+            material: materials.add(GROUND_COLOR),
+            ..default()
+        },
+    ));
 
     // Light
     commands.spawn(DirectionalLightBundle {
@@ -115,11 +130,42 @@ fn setup(
         ..default()
     });
 
+    // Gizmo
+    commands.spawn((
+        PbrBundle {
+            mesh: meshes.add(Sphere { radius: 1.5 }),
+            material: materials.add(StandardMaterial {
+                base_color: Color::srgb(1.0, 0.0, 0.0),
+                ..default()
+            }),
+            transform: Transform::from_xyz(0.0, -100.0, 0.0), // 初期位置はカメラに見えない場所
+            ..default()
+        },
+        Gizmo, // Gizmoのタグを付ける
+    ));
+
     // Dog model
-    commands.spawn(SceneBundle {
-        scene: asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/dog.glb")),
-        ..default()
-    });
+    commands.spawn((
+        SceneBundle {
+            scene: asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/dog.glb")),
+            // scene: asset_server.load("models/dog.glb#Scene0"),
+            ..default()
+        },
+        Dog,
+        // RaycastMesh::<()>::default(), // Make this mesh ray cast-able;
+    ));
+
+    
+    // Sphere
+    // commands.spawn((
+    //     PbrBundle {
+    //         mesh: meshes.add(Sphere { radius: 50.0 }),
+    //         material: materials.add(Color::from(css::GRAY)),
+    //         transform: Transform::from_xyz(50.0, 50.0, -80.0),
+    //         ..default()
+    //     },
+    //     RaycastMesh::<()>::default(), // Make this mesh ray cast-able;
+    // ));
 
     // UI Buttons for animation control
     commands
@@ -260,5 +306,35 @@ fn button_interaction_system(
                 *image = animation_button.normal_image.clone().into(); // change unselected button
             }
         }
+    }
+}
+
+fn get_cursor_position(
+    query: Query<&RaycastSource<()>>,
+    mut gizmo_query: Query<&mut Transform, With<Gizmo>>,
+) {
+    // info!("draw_cursor");
+    for ray_source in &query {
+        // if let Some((entity, intersection)) = ray_source.intersections().first() {
+        //     info!("Hit entity: {:?}, position: {:?}", entity, intersection.position());
+        // }
+        if let Some((_entity, intersection)) = ray_source.intersections().first() {
+            // Gizmoの位置を更新する
+            if let Ok(mut gizmo_transform) = gizmo_query.get_single_mut() {
+                gizmo_transform.translation = intersection.position();
+            }
+        }
+    }
+}
+
+#[allow(clippy::type_complexity)]
+fn make_scene_pickable(
+    mut commands: Commands,
+    mesh_query: Query<Entity, (With<Handle<Mesh>>, Without<RaycastMesh<()>>, Without<Gizmo>)>,
+) {
+    for entity in &mesh_query {
+        commands
+            .entity(entity)
+            .insert(RaycastMesh::<()>::default()); // Make this mesh ray cast-able
     }
 }

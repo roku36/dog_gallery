@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = "0.14.0"
+bevy = "0.14.1"
+bevy_mod_raycast= "0.18.0"
 bevy_panorbit_camera = "0.19.1"
 rand = "0.8.5"
 
