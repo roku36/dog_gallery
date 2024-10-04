@@ -138,10 +138,10 @@ fn setup(
                 base_color: Color::srgb(1.0, 0.0, 0.0),
                 ..default()
             }),
-            transform: Transform::from_xyz(0.0, -100.0, 0.0), // 初期位置はカメラに見えない場所
+            transform: Transform::from_xyz(0.0, -100.0, 0.0),
             ..default()
         },
-        Gizmo, // Gizmoのタグを付ける
+        Gizmo,
     ));
 
     // Dog model
